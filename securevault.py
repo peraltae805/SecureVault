@@ -1,5 +1,6 @@
 import os
 import shutil
+import hashlib
 from datetime import datetime
 import zipfile
 from cryptography.fernet import Fernet
@@ -29,6 +30,10 @@ def copy_files(source, destination):
             
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
             shutil.copy2(src_path, dest_path)
+              # Generate hash and save to a hash file
+            hash_value = hash_file(src_path)
+            with open(os.path.join(destination, "hashes.txt"), "a") as hash_log:
+                hash_log.write(f"{rel_path} {hash_value}\n")
             log_backup(f"Backed up: {src_path} -> {dest_path}")
 
 def create_zip(source_folder, zip_path):
@@ -59,6 +64,36 @@ def encrypt_file(input_file, output_file, key):
     encrypted = fernet.encrypt(data)
     with open(output_file, 'wb') as f:
         f.write(encrypted)
+
+def hash_file(file_path):
+    sha256 = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            sha256.update(chunk)
+    return sha256.hexdigest()
+
+def verify_hashes(backup_dir):
+    hash_file_path = os.path.join(backup_dir, "hashes.txt")
+    if not os.path.exists(hash_file_path):
+        print("No hash file found.")
+        return False
+
+    with open(hash_file_path, "r") as f:
+        for line in f:
+            rel_path, expected_hash = line.strip().split()
+            file_path = os.path.join(backup_dir, rel_path)
+
+            if not os.path.exists(file_path):
+                print(f"Missing file: {rel_path}")
+                return False
+
+            actual_hash = hash_file(file_path)
+            if actual_hash != expected_hash:
+                print(f"Hash mismatch: {rel_path}")
+                return False
+
+    print("All hashes verified.")
+    return True
 
 if __name__ == "__main__":
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
