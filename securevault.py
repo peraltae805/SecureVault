@@ -3,6 +3,8 @@ import shutil
 import hashlib
 from datetime import datetime
 import zipfile
+import schedule
+import time
 from cryptography.fernet import Fernet
 
 # Configuration
@@ -16,18 +18,32 @@ KEY_FILE = "secret.key"
 os.makedirs(BACKUP_DIR, exist_ok=True)
 os.makedirs("logs", exist_ok=True)
 
+# Logging function
 def log_backup(message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(LOG_FILE, "a") as log:
         log.write(f"[{timestamp}] {message}\n")
 
+def log_restore(message):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open("logs/restore.log", "a") as log:
+        log.write(f"[{timestamp}] {message}\n")
+
+# Hashing function for file integrity
+def hash_file(file_path):
+    sha256 = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            sha256.update(chunk)
+    return sha256.hexdigest()
+
+# File Copy with Hashing and Logging        
 def copy_files(source, destination):
     for root, dirs, files in os.walk(source):
         for file in files:
             src_path = os.path.join(root, file)
             rel_path = os.path.relpath(src_path, source)
             dest_path = os.path.join(destination, rel_path)
-            
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
             shutil.copy2(src_path, dest_path)
               # Generate hash and save to a hash file
@@ -36,6 +52,7 @@ def copy_files(source, destination):
                 hash_log.write(f"{rel_path} {hash_value}\n")
             log_backup(f"Backed up: {src_path} -> {dest_path}")
 
+#compression
 def create_zip(source_folder, zip_path):
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk(source_folder):
@@ -44,6 +61,7 @@ def create_zip(source_folder, zip_path):
                 arcname = os.path.relpath(file_path, source_folder)
                 zipf.write(file_path, arcname)
 
+# Encryption Key Management
 def generate_key():
     key = Fernet.generate_key()
     with open(KEY_FILE, 'wb') as f:
@@ -57,21 +75,33 @@ def load_key():
     else:
         return generate_key()
 
+# Encrypt/Decrypt Files
 def encrypt_file(input_file, output_file, key):
     fernet = Fernet(key)
-    with open(input_file, 'rb') as f:
-        data = f.read()
-    encrypted = fernet.encrypt(data)
-    with open(output_file, 'wb') as f:
-        f.write(encrypted)
+    try:
+        with open(input_file, 'rb') as f:
+            data = f.read()
+        encrypted = fernet.encrypt(data)
+        with open(output_file, 'wb') as f:
+            f.write(encrypted)
+    except Exception as e:
+        log_backup(f"Encryption failed: {e}")
 
-def hash_file(file_path):
-    sha256 = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            sha256.update(chunk)
-    return sha256.hexdigest()
+def decrypt_file(encrypted_file, decrypted_zip):
+    key = load_key()
+    fernet = Fernet(key)
+    try:
+        with open(encrypted_file, 'rb') as ef:
+            encrypted_data = ef.read()
+        decrypted_data = fernet.decrypt(encrypted_data)
+        with open(decrypted_zip, 'wb') as df:
+             df.write(decrypted_data)
+        log_restore(f"Decrypted: {encrypted_file} -> {decrypted_zip}")
+    except Exception as e:
+        log_restore(f"Decryption failed: {e}")
+        raise
 
+#Verify Checksums
 def verify_hashes(backup_dir):
     hash_file_path = os.path.join(backup_dir, "hashes.txt")
     if not os.path.exists(hash_file_path):
@@ -95,28 +125,118 @@ def verify_hashes(backup_dir):
     print("All hashes verified.")
     return True
 
-if __name__ == "__main__":
+def verify_extracted_hashes(extracted_dir):
+    hash_file_path = os.path.join(extracted_dir, "hashes.txt")
+    if not os.path.exists(hash_file_path):
+        log_restore("No hash file found.")
+        return False
+    with open(hash_file_path, "r") as f:
+        for line in f:
+            rel_path, expected_hash = line.strip().split()
+            file_path = os.path.join(extracted_dir, rel_path)
+            if not os.path.exists(file_path):
+                log_restore(f"Missing file: {rel_path}")
+                return False
+            actual_hash = hash_file(file_path)
+            if actual_hash != expected_hash:
+                log_restore(f"Hash mismatch: {rel_path}")
+                return False
+    log_restore("All hashes verified successfully.")
+    return True
+
+# Extract and restore
+def extract_zip(zip_path, extract_to):
+    try:
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(extract_to)
+        log_restore(f"Extracted: {zip_path} -> {extract_to}")
+    except zipfile.BadZipFile as e:
+        log_restore(f"Extraction failed: {e}")
+        raise
+
+def restore_files(extracted_dir, restore_to):
+    for root, dirs, files in os.walk(extracted_dir):
+        for file in files:
+            if file == "hashes.txt":
+                continue
+            src = os.path.join(root, file)
+            rel_path = os.path.relpath(src, extracted_dir)
+            dest = os.path.join(restore_to, rel_path)
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            try:
+                shutil.copy2(src, dest)
+                log_restore(f"Restored: {src} -> {dest}")
+            except Exception as e:
+                log_restore(f"Failed to restore {src}: {e}")
+
+def restore_backup(encrypted_backup_path, restore_to="restored_data"):
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    temp_zip = f"temp_restore_{timestamp}.zip"
+    temp_dir = f"temp_restore_{timestamp}_dir"
+    try:
+        decrypt_file(encrypted_backup_path, temp_zip)
+        os.makedirs(temp_dir, exist_ok=True)
+        extract_zip(temp_zip, temp_dir)
+        if verify_extracted_hashes(temp_dir):
+            os.makedirs(restore_to, exist_ok=True)
+            restore_files(temp_dir, restore_to)
+            log_restore("Restore completed successfully.")
+        else:
+            log_restore("Restore aborted: hash verification failed.")
+    except Exception as e:
+        log_restore(f"Restore failed: {e}")
+    finally:
+        if os.remove(temp_zip):
+            os.remove(temp_zip)
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
+
+def scheduled_backup():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_subdir = os.path.join(BACKUP_DIR, timestamp)
     os.makedirs(backup_subdir)
-
-    print(f"Starting backup from '{SOURCE_DIR}' to '{backup_subdir}'...")
+    log_backup(f"Starting backup: {SOURCE_DIR} -> {backup_subdir}")
     copy_files(SOURCE_DIR, backup_subdir)
-    print("Backup complete.")
-
-    # Compress backup folder
+    log_backup("File copy complete.")
     zip_path = f"{backup_subdir}.zip"
     create_zip(backup_subdir, zip_path)
-    print(f"Compressed backup to '{zip_path}'")
-
-    # Encrypt the zip file
+    log_backup(f"Compressed to: {zip_path}")
     key = load_key()
     encrypted_path = f"{zip_path}.enc"
     encrypt_file(zip_path, encrypted_path, key)
-    print(f"Encrypted backup saved to '{encrypted_path}'")
-
-    # Optional cleanup
+    log_backup(f"Encrypted backup saved to: {encrypted_path}")
+    if verify_hashes(backup_subdir):
+        log_backup("Hash verification successful.")
+    else:
+        log_backup("Hash verification failed.")
     shutil.rmtree(backup_subdir)
     os.remove(zip_path)
+    log_backup("Backup process completed.\n")
 
-    print("All done. Details saved in log.")
+def main():
+    parser = argparse.ArgumentParser(description="SecureVault Backup/Restore Tool")
+    parser.add_argument("--backup", action="store_true", help="Perform a backup now")
+    parser.add_argument("--restore", metavar="FILE", help="Path to encrypted backup (.enc)")
+    parser.add_argument("--output", metavar="DIR", default="restored_data", help="Restore destination directory")
+    parser.add_argument("--schedule", action="store_true", help="Run backup scheduler (daily at 16:02)")
+    args = parser.parse_args()
+
+    if args.backup:
+        scheduled_backup()
+    elif args.restore:
+        restore_backup(args.restore, args.output)
+    elif args.schedule:
+        schedule.every().day.at("16:00").do(scheduled_backup)
+        print("Scheduler started. Press Ctrl+C to stop.")
+        try:
+            while True:
+                schedule.run_pending()
+                time.sleep(60)
+        except KeyboardInterrupt:
+            print("Scheduler stopped.")
+    else:
+        parser.print_help()
+
+if __name__ == "__main__":
+    import argparse
+    main()
