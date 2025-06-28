@@ -52,7 +52,7 @@ def copy_files(source, destination):
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
             shutil.copy2(src_path, dest_path)
 
-              # Generate hash and save to a hash file
+            # Generate hash and save to a hash file
             hash_value = hash_file(src_path)
             with open(hash_log_path, "a") as hash_log:
                 hash_log.write(f"{rel_path} {hash_value}\n")
@@ -75,6 +75,9 @@ def generate_key():
     return key
 
 def load_key():
+    key = os.getenv('SECUREVAULT_KEY')
+    if key:
+        return key.encode()  # Convert string to bytes
     if os.path.exists(KEY_FILE):
         with open(KEY_FILE, 'rb') as f:
             return f.read()
@@ -107,7 +110,7 @@ def decrypt_file(encrypted_file, decrypted_zip):
         log_restore(f"Decryption failed: {e}")
         raise
 
-#Verify Checksums
+#Verify Hashes
 def verify_hashes(backup_dir):
     hash_file_path = os.path.join(backup_dir, "hashes", "hashes.txt")
     if not os.path.exists(hash_file_path):
@@ -131,6 +134,7 @@ def verify_hashes(backup_dir):
     print("All hashes verified.")
     return True
 
+# Verify extracted hashes during restore
 def verify_extracted_hashes(extracted_dir):
     hash_file_path = os.path.join(extracted_dir, "hashes" "hashes.txt")
     if not os.path.exists(hash_file_path):
@@ -183,6 +187,21 @@ def restore_backup(encrypted_backup_path, restore_to="restored_data"):
         decrypt_file(encrypted_backup_path, temp_zip)
         os.makedirs(temp_dir, exist_ok=True)
         extract_zip(temp_zip, temp_dir)
+        
+        # Simulated test cases
+        if test_mode == "missing":
+            test_file = os.path.join(temp_dir, os.listdir(temp_dir)[0])
+            if os.path.isfile(test_file):
+                os.remove(test_file)
+                log_restore("TEST: Simulated missing file.")
+
+        if test_mode == "corrupt":
+            hash_file_path = os.path.join(temp_dir, "hashes", "hashes.txt")
+            with open(hash_file_path, "a") as f:
+                f.write("tampered.txt deadbeef\n")
+            log_restore("TEST: Simulated corrupted hash.")
+
+        # Verify hashes after extraction
         if verify_extracted_hashes(temp_dir):
             os.makedirs(restore_to, exist_ok=True)
             restore_files(temp_dir, restore_to)
@@ -207,11 +226,14 @@ def scheduled_backup():
     os.makedirs(backup_subdir) # Ensure backup directory exists
     log_backup(f"Starting backup: {SOURCE_DIR} -> {backup_subdir}") 
     copy_files(SOURCE_DIR, backup_subdir) 
-    log_backup("File copy complete.") 
+    log_backup("File copy complete.")
+
+    # Create a zip archive of the backup directory
     zip_path = f"{backup_subdir}.zip" 
     create_zip(backup_subdir, zip_path) 
     log_backup(f"Compressed to: {zip_path}") 
-   
+    
+   # Encrypt the zip file
     key = load_key() 
     encrypted_path = f"{zip_path}.enc"
     encrypt_file(zip_path, encrypted_path, key) 
@@ -232,15 +254,21 @@ def main():
     parser.add_argument("--backup", action="store_true", help="Perform a backup now") 
     parser.add_argument("--restore", metavar="FILE", help="Path to encrypted backup (.enc)") 
     parser.add_argument("--output", metavar="DIR", default="restored_data", help="Restore destination directory") 
-    parser.add_argument("--schedule", action="store_true", help="Run backup scheduler (daily at 17:40)") 
+    parser.add_argument("--schedule", action="store_true", help="Run backup scheduler (daily at 18:20)") 
+    parser.add_argument("--test-missing", metavar="FILE", help="Simulate missing file during restore")
+    parser.add_argument("--test-corrupt", metavar="FILE", help="Simulate bad checksum during restore")
     args = parser.parse_args() 
 
-    if args.backup: 
+    if args.backup:
         scheduled_backup()
     elif args.restore:
         restore_backup(args.restore, args.output)
+    elif args.test_missing:
+        restore_backup(args.test_missing, args.output, test_mode="missing")
+    elif args.test_corrupt:
+        restore_backup(args.test_corrupt, args.output, test_mode="corrupt")
     elif args.schedule:
-        schedule.every().day.at("17:40").do(scheduled_backup)
+        schedule.every().day.at("18:20").do(scheduled_backup)
         print("Scheduler started. Press Ctrl+C to stop.")
         try: 
             while True: 
