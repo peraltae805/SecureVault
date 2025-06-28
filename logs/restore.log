@@ -1,0 +1,32 @@
+[2025-06-27 16:16:49] Decryption failed: [Errno 2] No such file or directory: 'File'
+[2025-06-27 16:16:49] Restore failed: [Errno 2] No such file or directory: 'File'
+[2025-06-27 16:17:07] Decryption failed: [Errno 2] No such file or directory: 'FILE'
+[2025-06-27 16:17:07] Restore failed: [Errno 2] No such file or directory: 'FILE'
+[2025-06-27 16:18:09] Decryption failed: [Errno 2] No such file or directory: 'FILE'
+[2025-06-27 16:18:09] Restore failed: [Errno 2] No such file or directory: 'FILE'
+[2025-06-27 16:18:45] Decryption failed: [Errno 2] No such file or directory: '20250627_161555.zip.enc'
+[2025-06-27 16:18:45] Restore failed: [Errno 2] No such file or directory: '20250627_161555.zip.enc'
+[2025-06-27 16:21:48] Decryption failed: [Errno 2] No such file or directory: 'FILE'
+[2025-06-27 16:21:48] Restore failed: [Errno 2] No such file or directory: 'FILE'
+[2025-06-27 16:22:55] Decryption failed: [Errno 2] No such file or directory: '20250627_161555.zip.enc'
+[2025-06-27 16:22:55] Restore failed: [Errno 2] No such file or directory: '20250627_161555.zip.enc'
+[2025-06-27 16:25:38] Decryption failed: [Errno 2] No such file or directory: 'File'
+[2025-06-27 16:25:38] Restore failed: [Errno 2] No such file or directory: 'File'
+[2025-06-27 16:27:06] Decryption failed: [Errno 2] No such file or directory: '20250627_161555.zip.enc'
+[2025-06-27 16:27:06] Restore failed: [Errno 2] No such file or directory: '20250627_161555.zip.enc'
+[2025-06-27 16:27:23] Decryption failed: [Errno 2] No such file or directory: '20250627_161555.zip.enc'
+[2025-06-27 16:27:23] Restore failed: [Errno 2] No such file or directory: '20250627_161555.zip.enc'
+[2025-06-27 17:41:31] Decryption failed: [Errno 2] No such file or directory: '20250627_174026.zip.enc'
+[2025-06-27 17:41:31] Restore failed: [Errno 2] No such file or directory: '20250627_174026.zip.enc'
+[2025-06-27 17:42:41] Decrypted: backups\20250627_174026.zip.enc -> temp_restore_20250627_174241.zip
+[2025-06-27 17:42:41] Extracted: temp_restore_20250627_174241.zip -> temp_restore_20250627_174241_dir
+[2025-06-27 17:42:41] No hash file found.
+[2025-06-27 17:42:41] Restore aborted: hash verification failed.
+[2025-06-27 18:21:16] Decrypted: backups\20250627_182010.zip.enc -> temp_restore_20250627_182116.zip
+[2025-06-27 18:21:16] Extracted: temp_restore_20250627_182116.zip -> temp_restore_20250627_182116_dir
+[2025-06-27 18:21:16] Restore failed: name 'test_mode' is not defined
+[2025-06-27 18:21:59] Decrypted: backups\20250627_182010.zip.enc -> temp_restore_20250627_182159.zip
+[2025-06-27 18:21:59] Extracted: temp_restore_20250627_182159.zip -> temp_restore_20250627_182159_dir
+[2025-06-27 18:21:59] Restore failed: name 'test_mode' is not defined
+[2025-06-27 18:22:36] Decryption failed: [Errno 2] No such file or directory: '20250627_182010.zip.enc'
+[2025-06-27 18:22:36] Restore failed: [Errno 2] No such file or directory: '20250627_182010.zip.enc'

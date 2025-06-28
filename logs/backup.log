@@ -1,2 +1,40 @@
-[2025-06-22 12:02:23] Backed up: source_data\sample.txt -> backups\20250622_120223\sample.txt
-[2025-06-22 12:03:27] Backed up: source_data\sample.txt -> backups\20250622_120327\sample.txt
+[2025-06-27 15:20:38] Starting backup: source_data -> backups\20250627_152038
+[2025-06-27 15:20:38] Backed up: source_data\sample.txt -> backups\20250627_152038\sample.txt
+[2025-06-27 15:20:38] File copy complete.
+[2025-06-27 15:20:38] Compressed to: backups\20250627_152038.zip
+[2025-06-27 15:20:38] Encrypted backup saved to: backups\20250627_152038.zip.enc
+[2025-06-27 15:20:38] Hash verification successful.
+[2025-06-27 15:20:38] Backup process completed.
+
+[2025-06-27 16:15:55] Starting backup: source_data -> backups\20250627_161555
+[2025-06-27 16:15:55] Backed up: source_data\sample.txt -> backups\20250627_161555\sample.txt
+[2025-06-27 16:15:55] File copy complete.
+[2025-06-27 16:15:55] Compressed to: backups\20250627_161555.zip
+[2025-06-27 16:15:55] Encrypted backup saved to: backups\20250627_161555.zip.enc
+[2025-06-27 16:15:55] Hash verification successful.
+[2025-06-27 16:15:55] Backup process completed.
+
+[2025-06-27 17:40:26] Starting backup: source_data -> backups\20250627_174026
+[2025-06-27 17:40:26] Backed up: source_data\sample.txt -> backups\20250627_174026\sample.txt
+[2025-06-27 17:40:26] File copy complete.
+[2025-06-27 17:40:26] Compressed to: backups\20250627_174026.zip
+[2025-06-27 17:40:26] Encrypted backup saved to: backups\20250627_174026.zip.enc
+[2025-06-27 17:40:26] Hash verification successful.
+[2025-06-27 17:40:26] Backup process completed.
+
+[2025-06-27 18:20:10] Starting backup: source_data -> backups\20250627_182010
+[2025-06-27 18:20:10] Backed up: source_data\sample.txt -> backups\20250627_182010\sample.txt
+[2025-06-27 18:20:10] File copy complete.
+[2025-06-27 18:20:10] Compressed to: backups\20250627_182010.zip
+[2025-06-27 18:20:10] Encrypted backup saved to: backups\20250627_182010.zip.enc
+[2025-06-27 18:20:10] Hash verification successful.
+[2025-06-27 18:20:10] Backup process completed.
+
+[2025-06-27 18:23:42] Starting backup: source_data -> backups\20250627_182342
+[2025-06-27 18:23:42] Backed up: source_data\sample.txt -> backups\20250627_182342\sample.txt
+[2025-06-27 18:23:42] File copy complete.
+[2025-06-27 18:23:42] Compressed to: backups\20250627_182342.zip
+[2025-06-27 18:23:42] Encrypted backup saved to: backups\20250627_182342.zip.enc
+[2025-06-27 18:23:42] Hash verification successful.
+[2025-06-27 18:23:42] Backup process completed.
+
