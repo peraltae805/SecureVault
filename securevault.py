@@ -255,7 +255,7 @@ def main():
     parser.add_argument("--backup", action="store_true", help="Perform a backup now") 
     parser.add_argument("--restore", metavar="FILE", help="Path to encrypted backup (.enc)") 
     parser.add_argument("--output", metavar="DIR", default="restored_data", help="Restore destination directory") 
-    parser.add_argument("--schedule", action="store_true", help="Run backup scheduler (daily at 18:20)") 
+    parser.add_argument("--schedule", action="store_true", help="Run backup scheduler (daily at 12:00)") 
     parser.add_argument("--test-missing", metavar="FILE", help="Simulate missing file during restore")
     parser.add_argument("--test-corrupt", metavar="FILE", help="Simulate bad checksum during restore")
     args = parser.parse_args() 
@@ -269,7 +269,7 @@ def main():
     elif args.test_corrupt:
         restore_backup(args.test_corrupt, args.output, test_mode="corrupt")
     elif args.schedule:
-        schedule.every().day.at("18:20").do(scheduled_backup)
+        schedule.every().day.at("12:00").do(scheduled_backup)
         print("Scheduler started. Press Ctrl+C to stop.")
         try: 
             while True: 
