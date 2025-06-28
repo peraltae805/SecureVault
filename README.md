@@ -19,6 +19,14 @@ Simulated tests for missing or corrupted files
 Logging for both backup and restore processes
 
 # Project Structure 
+```bash
+.
+├── source_data/          # Your original data to back up
+├── backups/              # Encrypted backups saved here
+├── logs/                 # Contains backup.log and restore.log
+├── secret.key            # Encryption key (auto-generated if missing)
+└── securevault.py        # Main script
+```
 
 ### Install dependencies
 ```bash
