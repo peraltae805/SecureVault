@@ -1,3 +1,4 @@
+from doctest import testmod
 import os
 import shutil
 import hashlib
@@ -189,13 +190,13 @@ def restore_backup(encrypted_backup_path, restore_to="restored_data"):
         extract_zip(temp_zip, temp_dir)
         
         # Simulated test cases
-        if test_mode == "missing":
+        if testmod == "missing":
             test_file = os.path.join(temp_dir, os.listdir(temp_dir)[0])
             if os.path.isfile(test_file):
                 os.remove(test_file)
                 log_restore("TEST: Simulated missing file.")
 
-        if test_mode == "corrupt":
+        if testmod == "corrupt":
             hash_file_path = os.path.join(temp_dir, "hashes", "hashes.txt")
             with open(hash_file_path, "a") as f:
                 f.write("tampered.txt deadbeef\n")
