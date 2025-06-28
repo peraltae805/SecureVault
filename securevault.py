@@ -1,14 +1,14 @@
-from doctest import testmod
-import os
-import shutil
-import hashlib
-from datetime import datetime
-import zipfile
-import schedule
-import time
-from cryptography.fernet import Fernet
-import argparse
-import sys
+from doctest import testmod # Ensure this is the first import
+import os # Import necessary libraries
+import shutil # For file operations
+import hashlib # For hashing files
+from datetime import datetime # For timestamps
+import zipfile # For creating zip files
+import schedule # For scheduling backups
+import time # For time management
+from cryptography.fernet import Fernet # For encryption and decryption
+import argparse # For command line argument parsing
+import sys # For system operations
 
 # Configuration
 SOURCE_DIR = "source_data"         # Directory to back up
@@ -18,8 +18,8 @@ RESTORE_LOG = "logs/restore.log"  # Restore log file
 KEY_FILE = "secret.key"          # Encryption key file
 
 # Ensure directories exist
-os.makedirs(BACKUP_DIR, exist_ok=True)
-os.makedirs("logs", exist_ok=True)
+os.makedirs(BACKUP_DIR, exist_ok=True) # Ensure backup directory exists
+os.makedirs("logs", exist_ok=True) # Ensure logs directory exists
 
 # Logging function
 def log_backup(message):
@@ -27,6 +27,7 @@ def log_backup(message):
     with open(LOG_FILE, "a") as log:
         log.write(f"[{timestamp}] {message}\n")
 
+# Logging function for restore operations
 def log_restore(message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open("logs/restore.log", "a") as log:
@@ -75,6 +76,7 @@ def generate_key():
         f.write(key)
     return key
 
+# Load encryption key from environment variable or file
 def load_key():
     key = os.getenv('SECUREVAULT_KEY')
     if key:
@@ -97,6 +99,7 @@ def encrypt_file(input_file, output_file, key):
     except Exception as e:
         log_backup(f"Encryption failed: {e}")
 
+# Decrypt File
 def decrypt_file(encrypted_file, decrypted_zip):
     try:
         key = load_key()
@@ -164,7 +167,7 @@ def extract_zip(zip_path, extract_to):
     except zipfile.BadZipFile as e:
         log_restore(f"Extraction failed: {e}")
         raise
-
+# Restore files from extracted directory
 def restore_files(extracted_dir, restore_to):
     for root, dirs, files in os.walk(extracted_dir):
         for file in files:
@@ -180,6 +183,7 @@ def restore_files(extracted_dir, restore_to):
             except Exception as e:
                 log_restore(f"Failed to restore {src}: {e}")
 
+# Restore Function
 def restore_backup(encrypted_backup_path, restore_to="restored_data"):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     temp_zip = f"temp_restore_{timestamp}.zip"
@@ -196,6 +200,7 @@ def restore_backup(encrypted_backup_path, restore_to="restored_data"):
                 os.remove(test_file)
                 log_restore("TEST: Simulated missing file.")
 
+         # Simulated test case for corrupted hash
         if testmod == "corrupt":
             hash_file_path = os.path.join(temp_dir, "hashes", "hashes.txt")
             with open(hash_file_path, "a") as f:
@@ -239,7 +244,7 @@ def scheduled_backup():
     encrypted_path = f"{zip_path}.enc"
     encrypt_file(zip_path, encrypted_path, key) 
     log_backup(f"Encrypted backup saved to: {encrypted_path}") 
-
+# Verify hashes after backup
     if verify_hashes(backup_subdir): 
         log_backup("Hash verification successful.") 
     else:
@@ -260,6 +265,7 @@ def main():
     parser.add_argument("--test-corrupt", metavar="FILE", help="Simulate bad checksum during restore")
     args = parser.parse_args() 
 
+# Check if the key is set in the environment variable
     if args.backup:
         scheduled_backup()
     elif args.restore:
